@@ -2,7 +2,7 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import { Market } from "@/types/market";
-import { getYesPrice, formatVolume } from "@/lib/polymarket";
+import { getYesPrice, formatVolume, getEventSlug } from "@/lib/polymarket";
 
 interface WatchlistPanelProps {
   markets: Market[];
@@ -53,7 +53,7 @@ export default function WatchlistPanel({ markets, onClose, onRemove }: Watchlist
                 const yesPct = Math.round(getYesPrice(market) * 100);
                 return (
                   <motion.div
-                    key={market.id || market.condition_id}
+                    key={market.id || market.conditionId}
                     layout
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -69,13 +69,13 @@ export default function WatchlistPanel({ markets, onClose, onRemove }: Watchlist
                           {yesPct}% Yes
                         </span>
                         <span className="text-xs text-[var(--text-muted)]">
-                          {formatVolume(market.volume_num || 0)} vol
+                          {formatVolume(market.volumeNum || 0)} vol
                         </span>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
                       <a
-                        href={`https://polymarket.com/event/${market.slug}`}
+                        href={`https://polymarket.com/event/${getEventSlug(market)}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="px-3 py-1.5 rounded-lg bg-[var(--accent-green)]/10 text-[var(--accent-green)] text-xs font-bold hover:bg-[var(--accent-green)]/20 transition-colors"
@@ -83,7 +83,7 @@ export default function WatchlistPanel({ markets, onClose, onRemove }: Watchlist
                         Trade
                       </a>
                       <button
-                        onClick={() => onRemove(market.id || market.condition_id)}
+                        onClick={() => onRemove(market.id || market.conditionId)}
                         className="p-1.5 rounded-lg hover:bg-[var(--accent-red)]/10 text-[var(--text-muted)] hover:text-[var(--accent-red)] transition-colors"
                       >
                         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>

@@ -1,58 +1,21 @@
 import { Market } from "@/types/market";
 
-const GAMMA_API = "https://gamma-api.polymarket.com";
-
-export async function fetchMarkets(
-  cursor?: string,
-  limit = 20
-): Promise<{ markets: Market[]; nextCursor: string }> {
-  const params = new URLSearchParams({
-    limit: limit.toString(),
-    active: "true",
-    closed: "false",
-    order: "volume",
-    ascending: "false",
-  });
-
-  if (cursor) {
-    params.set("next_cursor", cursor);
-  }
-
-  const res = await fetch(`${GAMMA_API}/markets?${params.toString()}`, {
-    next: { revalidate: 60 },
-  });
-
-  if (!res.ok) {
-    throw new Error(`Polymarket API error: ${res.status}`);
-  }
-
-  const data = await res.json();
-
-  const markets: Market[] = (data ?? [])
-    .filter((m: Market) => m.question && m.tokens?.length > 0)
-    .map((m: Market) => ({
-      ...m,
-      volume_num: typeof m.volume === "number" ? m.volume : parseFloat(String(m.volume)) || 0,
-    }));
-
-  return {
-    markets,
-    nextCursor: data.next_cursor ?? "",
-  };
-}
-
 export function getYesPrice(market: Market): number {
-  const yesToken = market.tokens?.find(
-    (t) => t.outcome?.toLowerCase() === "yes"
-  );
-  return yesToken?.price ?? 0.5;
+  try {
+    const prices: string[] = JSON.parse(market.outcomePrices);
+    return parseFloat(prices[0]) || 0.5;
+  } catch {
+    return 0.5;
+  }
 }
 
 export function getNoPrice(market: Market): number {
-  const noToken = market.tokens?.find(
-    (t) => t.outcome?.toLowerCase() === "no"
-  );
-  return noToken?.price ?? 0.5;
+  try {
+    const prices: string[] = JSON.parse(market.outcomePrices);
+    return parseFloat(prices[1]) || 0.5;
+  } catch {
+    return 0.5;
+  }
 }
 
 export function formatVolume(volume: number): string {
@@ -73,4 +36,11 @@ export function formatEndDate(isoDate: string): string {
   if (diffDays <= 7) return `${diffDays}d left`;
   if (diffDays <= 30) return `${Math.ceil(diffDays / 7)}w left`;
   return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+}
+
+export function getEventSlug(market: Market): string {
+  if (market.events?.[0]?.slug) {
+    return market.events[0].slug;
+  }
+  return market.slug;
 }

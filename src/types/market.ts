@@ -1,31 +1,29 @@
-export interface MarketToken {
-  token_id: string;
-  outcome: string;
-  price: number;
-  winner: boolean;
+export interface MarketEvent {
+  id: string;
+  slug: string;
+  title: string;
 }
 
 export interface Market {
   id: string;
-  condition_id: string;
+  conditionId: string;
   question: string;
   description: string;
   image: string;
   icon: string;
-  end_date_iso: string;
-  tokens: MarketToken[];
-  volume: number;
-  volume_num: number;
-  liquidity: number;
+  slug: string;
+  endDate: string;
+  endDateIso: string;
+  outcomes: string;
+  outcomePrices: string;
+  volume: string;
+  volumeNum: number;
+  liquidity: string;
+  liquidityNum: number;
   active: boolean;
   closed: boolean;
-  category: string;
-  slug: string;
-}
-
-export interface PolymarketResponse {
-  data: Market[];
-  next_cursor: string;
+  groupItemTitle: string;
+  events: MarketEvent[];
 }
 
 export type SwipeDirection = "left" | "right" | "up";

@@ -3,7 +3,7 @@
 import { motion, useMotionValue, useTransform, PanInfo } from "framer-motion";
 import { useState, useCallback } from "react";
 import { Market, SwipeDirection } from "@/types/market";
-import { getYesPrice, formatVolume, formatEndDate } from "@/lib/polymarket";
+import { getYesPrice, formatVolume, formatEndDate, getEventSlug } from "@/lib/polymarket";
 
 interface SwipeCardProps {
   market: Market;
@@ -111,12 +111,12 @@ export default function SwipeCard({ market, onSwipe, isTop }: SwipeCardProps) {
 
         {/* Card Content */}
         <div className="relative z-5 h-full flex flex-col justify-between p-6">
-          {/* Top: Category + Live Badge */}
+          {/* Top: Event Title + Live Badge */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              {market.category && (
-                <span className="px-3 py-1 rounded-full bg-[var(--accent-purple)]/20 text-[var(--accent-purple)] text-xs font-semibold uppercase tracking-wide">
-                  {market.category}
+              {market.groupItemTitle && (
+                <span className="px-3 py-1 rounded-full bg-[var(--accent-purple)]/20 text-[var(--accent-purple)] text-xs font-semibold uppercase tracking-wide max-w-[200px] truncate">
+                  {market.groupItemTitle}
                 </span>
               )}
             </div>
@@ -163,7 +163,7 @@ export default function SwipeCard({ market, onSwipe, isTop }: SwipeCardProps) {
                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                   <span className="text-[var(--text-secondary)] font-medium">
-                    {formatVolume(market.volume_num || 0)}
+                    {formatVolume(market.volumeNum || 0)}
                   </span>
                 </div>
                 <div className="flex items-center gap-1.5">
@@ -171,12 +171,12 @@ export default function SwipeCard({ market, onSwipe, isTop }: SwipeCardProps) {
                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                   <span className="text-[var(--text-secondary)] font-medium">
-                    {market.end_date_iso ? formatEndDate(market.end_date_iso) : "Open"}
+                    {market.endDateIso ? formatEndDate(market.endDateIso) : "Open"}
                   </span>
                 </div>
               </div>
               <a
-                href={`https://polymarket.com/event/${market.slug}`}
+                href={`https://polymarket.com/event/${getEventSlug(market)}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-[var(--accent-blue)] text-xs font-semibold hover:underline"

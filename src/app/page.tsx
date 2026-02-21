@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { AnimatePresence } from "framer-motion";
 import { Market, SwipeDirection } from "@/types/market";
+import { getEventSlug } from "@/lib/polymarket";
 import SwipeCard from "@/components/SwipeCard";
 import ActionButtons from "@/components/ActionButtons";
 import Header from "@/components/Header";
@@ -22,9 +23,11 @@ export default function Home() {
   const [watchlist, setWatchlist] = useState<Market[]>([]);
   const [showWatchlist, setShowWatchlist] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [cursor, setCursor] = useState<string>("");
+  const [offset, setOffset] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
   const [toast, setToast] = useState<ToastState>({ message: "", type: "yes", visible: false });
   const toastTimeout = useRef<NodeJS.Timeout | null>(null);
+  const fetchingRef = useRef(false);
 
   const showToast = useCallback((message: string, type: "yes" | "no" | "star") => {
     if (toastTimeout.current) clearTimeout(toastTimeout.current);
@@ -34,38 +37,45 @@ export default function Home() {
     }, 1500);
   }, []);
 
-  const fetchMarkets = useCallback(async (nextCursor?: string) => {
+  const fetchMarkets = useCallback(async (nextOffset: number) => {
+    if (fetchingRef.current) return;
+    fetchingRef.current = true;
     try {
-      const params = new URLSearchParams({ limit: "20" });
-      if (nextCursor) params.set("cursor", nextCursor);
+      const params = new URLSearchParams({
+        limit: "20",
+        offset: nextOffset.toString(),
+      });
 
       const res = await fetch(`/api/markets?${params.toString()}`);
       if (!res.ok) throw new Error("Failed to fetch");
 
       const data = await res.json();
-      const newMarkets = (data ?? []).filter(
-        (m: Market) => m.question && m.tokens?.length > 0
-      );
+      const newMarkets: Market[] = data.markets ?? [];
 
-      setMarkets((prev) => [...prev, ...newMarkets]);
-      setCursor(data.next_cursor ?? "");
+      if (newMarkets.length === 0) {
+        setHasMore(false);
+      } else {
+        setMarkets((prev) => [...prev, ...newMarkets]);
+        setOffset(nextOffset + newMarkets.length);
+      }
     } catch (err) {
       console.error("Failed to fetch markets:", err);
     } finally {
       setLoading(false);
+      fetchingRef.current = false;
     }
   }, []);
 
   useEffect(() => {
-    fetchMarkets();
+    fetchMarkets(0);
   }, [fetchMarkets]);
 
   // Prefetch more when running low
   useEffect(() => {
-    if (markets.length > 0 && currentIndex >= markets.length - 5 && cursor) {
-      fetchMarkets(cursor);
+    if (markets.length > 0 && currentIndex >= markets.length - 5 && hasMore) {
+      fetchMarkets(offset);
     }
-  }, [currentIndex, markets.length, cursor, fetchMarkets]);
+  }, [currentIndex, markets.length, offset, hasMore, fetchMarkets]);
 
   const handleSwipe = useCallback(
     (direction: SwipeDirection) => {
@@ -74,13 +84,12 @@ export default function Home() {
 
       if (direction === "right") {
         showToast("Interested!", "yes");
-        // Open polymarket in a new tab
-        window.open(`https://polymarket.com/event/${market.slug}`, "_blank");
+        window.open(`https://polymarket.com/event/${getEventSlug(market)}`, "_blank");
       } else if (direction === "left") {
         showToast("Passed", "no");
       } else if (direction === "up") {
         // Super like = add to watchlist
-        if (!watchlist.find((m) => (m.id || m.condition_id) === (market.id || market.condition_id))) {
+        if (!watchlist.find((m) => (m.id || m.conditionId) === (market.id || market.conditionId))) {
           setWatchlist((prev) => [market, ...prev]);
           showToast("Added to Watchlist!", "star");
         }
@@ -98,7 +107,7 @@ export default function Home() {
   const handleSuperLike = useCallback(() => handleSwipe("up"), [handleSwipe]);
 
   const removeFromWatchlist = useCallback((id: string) => {
-    setWatchlist((prev) => prev.filter((m) => (m.id || m.condition_id) !== id));
+    setWatchlist((prev) => prev.filter((m) => (m.id || m.conditionId) !== id));
   }, []);
 
   // Keyboard shortcuts
@@ -143,7 +152,7 @@ export default function Home() {
           <AnimatePresence mode="popLayout">
             {visibleMarkets.map((market, i) => (
               <SwipeCard
-                key={market.id || market.condition_id || currentIndex + i}
+                key={market.id || market.conditionId || currentIndex + i}
                 market={market}
                 onSwipe={handleSwipe}
                 isTop={i === 0}
@@ -163,9 +172,10 @@ export default function Home() {
               onClick={() => {
                 setMarkets([]);
                 setCurrentIndex(0);
-                setCursor("");
+                setOffset(0);
+                setHasMore(true);
                 setLoading(true);
-                fetchMarkets();
+                fetchMarkets(0);
               }}
               className="px-6 py-2.5 rounded-full bg-[var(--accent-purple)] text-white font-semibold text-sm hover:opacity-90 transition-opacity"
             >

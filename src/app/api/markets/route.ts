@@ -4,20 +4,17 @@ const GAMMA_API = "https://gamma-api.polymarket.com";
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
-  const cursor = searchParams.get("cursor") || "";
+  const offset = searchParams.get("offset") || "0";
   const limit = searchParams.get("limit") || "20";
 
   const params = new URLSearchParams({
     limit,
+    offset,
     active: "true",
     closed: "false",
     order: "volume",
     ascending: "false",
   });
-
-  if (cursor) {
-    params.set("next_cursor", cursor);
-  }
 
   try {
     const res = await fetch(`${GAMMA_API}/markets?${params.toString()}`, {
@@ -32,7 +29,14 @@ export async function GET(request: NextRequest) {
     }
 
     const data = await res.json();
-    return NextResponse.json(data);
+
+    // The gamma API returns a flat array of markets
+    const markets = (Array.isArray(data) ? data : []).filter(
+      (m: Record<string, unknown>) =>
+        m.question && m.outcomePrices && m.active && !m.closed
+    );
+
+    return NextResponse.json({ markets });
   } catch {
     return NextResponse.json(
       { error: "Failed to fetch markets" },
