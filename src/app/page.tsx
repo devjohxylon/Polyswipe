@@ -25,6 +25,7 @@ export default function Home() {
   const toastTimeout = useRef<NodeJS.Timeout | null>(null);
   const fetchingRef = useRef(false);
   const sentinelRef = useRef<HTMLDivElement>(null);
+  const seenIdsRef = useRef(new Set<string>());
 
   const showToast = useCallback((message: string, type: "yes" | "no" | "star") => {
     if (toastTimeout.current) clearTimeout(toastTimeout.current);
@@ -47,13 +48,23 @@ export default function Home() {
       if (!res.ok) throw new Error("Failed to fetch");
 
       const data = await res.json();
-      const newMarkets: Market[] = data.markets ?? [];
+      const incoming: Market[] = data.markets ?? [];
 
-      if (newMarkets.length === 0) {
+      // Deduplicate across all batches
+      const unique = incoming.filter((m) => {
+        const id = m.id || m.conditionId;
+        if (seenIdsRef.current.has(id)) return false;
+        seenIdsRef.current.add(id);
+        return true;
+      });
+
+      if (incoming.length === 0) {
         setHasMore(false);
       } else {
-        setMarkets((prev) => [...prev, ...newMarkets]);
-        setOffset(nextOffset + newMarkets.length);
+        if (unique.length > 0) {
+          setMarkets((prev) => [...prev, ...unique]);
+        }
+        setOffset(nextOffset + incoming.length);
       }
     } catch (err) {
       console.error("Failed to fetch markets:", err);
@@ -123,55 +134,60 @@ export default function Home() {
 
       {/* Feed */}
       <div className="flex-1 overflow-y-auto no-scrollbar">
-        {loading ? (
-          <div>
-            {Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className="flex gap-3 px-4 py-3 border-b border-[var(--border)]">
-                <div className="w-12 h-12 rounded-lg animate-shimmer flex-shrink-0" />
-                <div className="flex-1 space-y-2 pt-0.5">
-                  <div className="h-3.5 w-full rounded animate-shimmer" />
-                  <div className="h-3.5 w-2/3 rounded animate-shimmer" />
-                  <div className="h-3 w-1/4 rounded animate-shimmer mt-1" />
-                  <div className="flex gap-2 mt-1">
-                    <div className="h-7 w-16 rounded-md animate-shimmer" />
-                    <div className="h-7 w-16 rounded-md animate-shimmer" />
+        <div className="max-w-lg mx-auto">
+          {loading ? (
+            <div className="py-2">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="px-4 py-2">
+                  <div className="bg-[var(--bg-card)] rounded-xl border border-[var(--border)] overflow-hidden">
+                    <div className="w-full h-40 animate-shimmer" />
+                    <div className="p-4 space-y-3">
+                      <div className="h-5 w-full rounded animate-shimmer" />
+                      <div className="h-5 w-3/4 rounded animate-shimmer" />
+                      <div className="h-3.5 w-1/3 rounded animate-shimmer" />
+                      <div className="flex gap-3 mt-2">
+                        <div className="flex-1 h-12 rounded-lg animate-shimmer" />
+                        <div className="flex-1 h-12 rounded-lg animate-shimmer" />
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        ) : markets.length > 0 ? (
-          <div>
-            {markets.map((market) => (
-              <MarketCard
-                key={market.id || market.conditionId}
-                market={market}
-                onSave={toggleSave}
-                isSaved={savedIds.has(market.id || market.conditionId)}
-              />
-            ))}
-
-            <div ref={sentinelRef} className="flex items-center justify-center py-8">
-              {hasMore && <div className="feed-spinner" />}
+              ))}
             </div>
-          </div>
-        ) : (
-          <div className="h-full flex flex-col items-center justify-center text-[var(--text-muted)] px-8">
-            <p className="text-sm mb-4">No markets found.</p>
-            <button
-              onClick={() => {
-                setMarkets([]);
-                setOffset(0);
-                setHasMore(true);
-                setLoading(true);
-                fetchMarkets(0);
-              }}
-              className="px-4 py-2 rounded-lg bg-[var(--poly-blue)] text-white font-medium text-sm"
-            >
-              Refresh
-            </button>
-          </div>
-        )}
+          ) : markets.length > 0 ? (
+            <div className="py-2">
+              {markets.map((market) => (
+                <MarketCard
+                  key={market.id || market.conditionId}
+                  market={market}
+                  onSave={toggleSave}
+                  isSaved={savedIds.has(market.id || market.conditionId)}
+                />
+              ))}
+
+              <div ref={sentinelRef} className="flex items-center justify-center py-8">
+                {hasMore && <div className="feed-spinner" />}
+              </div>
+            </div>
+          ) : (
+            <div className="h-full flex flex-col items-center justify-center text-[var(--text-muted)] px-8 pt-32">
+              <p className="text-sm mb-4">No markets found.</p>
+              <button
+                onClick={() => {
+                  setMarkets([]);
+                  setOffset(0);
+                  setHasMore(true);
+                  setLoading(true);
+                  seenIdsRef.current.clear();
+                  fetchMarkets(0);
+                }}
+                className="px-4 py-2 rounded-lg bg-[var(--poly-blue)] text-white font-medium text-sm"
+              >
+                Refresh
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Toast */}

@@ -17,53 +17,80 @@ export default function MarketCard({ market, onSave, isSaved }: MarketCardProps)
   const eventUrl = `https://polymarket.com/event/${getEventSlug(market)}`;
 
   return (
-    <a
-      href={eventUrl}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="block border-b border-[var(--border)] hover:bg-[var(--bg-card)] transition-colors"
-    >
-      <div className="flex gap-3 px-4 py-3">
-        {/* Thumbnail */}
-        {market.icon && (
-          <img
-            src={market.icon}
-            alt=""
-            className="w-12 h-12 rounded-lg object-cover flex-shrink-0 mt-0.5"
-          />
+    <div className="px-4 py-2">
+      <a
+        href={eventUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="block bg-[var(--bg-card)] rounded-xl border border-[var(--border)] hover:border-[var(--border-hover)] transition-colors overflow-hidden"
+      >
+        {/* Image banner */}
+        {market.image && (
+          <div className="relative w-full h-40 sm:h-48 bg-[var(--bg-secondary)]">
+            <img
+              src={market.image}
+              alt=""
+              className="w-full h-full object-cover"
+            />
+            {/* Bookmark overlay */}
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onSave(market);
+              }}
+              className={`absolute top-3 right-3 p-2 rounded-lg backdrop-blur-sm transition-colors ${
+                isSaved
+                  ? "bg-[var(--poly-blue)] text-white"
+                  : "bg-black/40 text-white/70 hover:text-white"
+              }`}
+            >
+              <svg className="w-4 h-4" fill={isSaved ? "currentColor" : "none"} viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+              </svg>
+            </button>
+          </div>
         )}
 
         {/* Content */}
-        <div className="flex-1 min-w-0">
+        <div className="p-4">
           {/* Question */}
-          <p className="text-[13px] font-medium text-[var(--text-primary)] leading-[1.4] line-clamp-2">
+          <h3 className="text-[16px] font-semibold text-[var(--text-primary)] leading-snug">
             {market.question}
-          </p>
+          </h3>
 
-          {/* Meta row */}
-          <div className="flex items-center gap-2 mt-1">
-            <span className="text-[11px] text-[var(--text-muted)] font-medium">
+          {/* Meta */}
+          <div className="flex items-center gap-2.5 mt-2">
+            <span className="text-[12px] text-[var(--text-muted)] font-medium">
               {formatVolume(market.volumeNum || 0)} Vol.
             </span>
             {market.endDateIso && (
               <>
-                <span className="text-[var(--text-muted)] text-[9px]">&bull;</span>
-                <span className="text-[11px] text-[var(--text-muted)]">
+                <span className="text-[var(--text-muted)] text-[8px]">&bull;</span>
+                <span className="text-[12px] text-[var(--text-muted)]">
                   {formatEndDate(market.endDateIso)}
+                </span>
+              </>
+            )}
+            {market.liquidityNum > 0 && (
+              <>
+                <span className="text-[var(--text-muted)] text-[8px]">&bull;</span>
+                <span className="text-[12px] text-[var(--text-muted)]">
+                  {formatVolume(market.liquidityNum)} Liq.
                 </span>
               </>
             )}
           </div>
 
           {/* Yes / No buttons */}
-          <div className="flex items-center gap-2 mt-2">
+          <div className="flex gap-3 mt-4">
             <button
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
                 window.open(eventUrl, "_blank");
               }}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[12px] font-semibold text-[var(--poly-green)] bg-[var(--poly-green-bg)] hover:bg-[var(--poly-green-hover)] transition-colors"
+              className="flex-1 flex items-center justify-center gap-2 py-3 rounded-lg text-[14px] font-bold text-[var(--poly-green)] bg-[var(--poly-green-bg)] hover:bg-[var(--poly-green-hover)] border border-[var(--poly-green)]/15 transition-colors"
             >
               Yes {yesCents}¢
             </button>
@@ -73,33 +100,13 @@ export default function MarketCard({ market, onSave, isSaved }: MarketCardProps)
                 e.stopPropagation();
                 window.open(eventUrl, "_blank");
               }}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[12px] font-semibold text-[var(--poly-red)] bg-[var(--poly-red-bg)] hover:bg-[var(--poly-red-hover)] transition-colors"
+              className="flex-1 flex items-center justify-center gap-2 py-3 rounded-lg text-[14px] font-bold text-[var(--poly-red)] bg-[var(--poly-red-bg)] hover:bg-[var(--poly-red-hover)] border border-[var(--poly-red)]/15 transition-colors"
             >
               No {noCents}¢
             </button>
-
-            {/* Spacer + bookmark */}
-            <div className="ml-auto">
-              <button
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  onSave(market);
-                }}
-                className={`p-1.5 rounded-md transition-colors ${
-                  isSaved
-                    ? "text-[var(--poly-blue)]"
-                    : "text-[var(--text-muted)] hover:text-[var(--text-secondary)]"
-                }`}
-              >
-                <svg className="w-4 h-4" fill={isSaved ? "currentColor" : "none"} viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
-                </svg>
-              </button>
-            </div>
           </div>
         </div>
-      </div>
-    </a>
+      </a>
+    </div>
   );
 }
