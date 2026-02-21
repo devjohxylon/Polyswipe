@@ -65,7 +65,7 @@ export default function WatchlistPanel({ markets, onClose, onRemove }: Watchlist
                 </svg>
               </div>
               <p className="text-sm font-medium mb-1">No saved markets yet</p>
-              <p className="text-xs text-[var(--text-muted)]/60">Swipe up on a card to save it here</p>
+              <p className="text-xs text-[var(--text-muted)]/60">Bookmark markets to save them here</p>
             </div>
           ) : (
             <AnimatePresence>

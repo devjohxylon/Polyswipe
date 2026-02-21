@@ -55,7 +55,7 @@ export default function Toast({ message, type, visible }: ToastProps) {
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, scale: 0.9 }}
           transition={{ type: "spring", stiffness: 400, damping: 25 }}
-          className={`fixed bottom-32 left-1/2 -translate-x-1/2 z-[100] px-5 py-2.5 rounded-2xl bg-gradient-to-r ${c.gradient} border ${c.border} backdrop-blur-xl ${c.shadow}`}
+          className={`fixed bottom-8 left-1/2 -translate-x-1/2 z-[100] px-5 py-2.5 rounded-2xl bg-gradient-to-r ${c.gradient} border ${c.border} backdrop-blur-xl ${c.shadow}`}
         >
           <span className={`${c.text} font-bold text-sm flex items-center gap-2`}>
             {c.icon}

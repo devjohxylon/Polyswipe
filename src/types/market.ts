@@ -25,5 +25,3 @@ export interface Market {
   groupItemTitle: string;
   events: MarketEvent[];
 }
-
-export type SwipeDirection = "left" | "right" | "up";

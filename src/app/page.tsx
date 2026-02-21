@@ -2,13 +2,10 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { AnimatePresence } from "framer-motion";
-import { Market, SwipeDirection } from "@/types/market";
-import { getEventSlug } from "@/lib/polymarket";
-import SwipeCard from "@/components/SwipeCard";
-import ActionButtons from "@/components/ActionButtons";
+import { Market } from "@/types/market";
+import MarketCard from "@/components/MarketCard";
 import Header from "@/components/Header";
 import WatchlistPanel from "@/components/WatchlistPanel";
-import LoadingSkeleton from "@/components/LoadingSkeleton";
 import Toast from "@/components/Toast";
 
 interface ToastState {
@@ -19,7 +16,6 @@ interface ToastState {
 
 export default function Home() {
   const [markets, setMarkets] = useState<Market[]>([]);
-  const [currentIndex, setCurrentIndex] = useState(0);
   const [watchlist, setWatchlist] = useState<Market[]>([]);
   const [showWatchlist, setShowWatchlist] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -28,6 +24,7 @@ export default function Home() {
   const [toast, setToast] = useState<ToastState>({ message: "", type: "yes", visible: false });
   const toastTimeout = useRef<NodeJS.Timeout | null>(null);
   const fetchingRef = useRef(false);
+  const sentinelRef = useRef<HTMLDivElement>(null);
 
   const showToast = useCallback((message: string, type: "yes" | "no" | "star") => {
     if (toastTimeout.current) clearTimeout(toastTimeout.current);
@@ -70,71 +67,51 @@ export default function Home() {
     fetchMarkets(0);
   }, [fetchMarkets]);
 
-  // Prefetch more when running low
+  // Infinite scroll via IntersectionObserver
   useEffect(() => {
-    if (markets.length > 0 && currentIndex >= markets.length - 5 && hasMore) {
-      fetchMarkets(offset);
-    }
-  }, [currentIndex, markets.length, offset, hasMore, fetchMarkets]);
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
 
-  const handleSwipe = useCallback(
-    (direction: SwipeDirection) => {
-      const market = markets[currentIndex];
-      if (!market) return;
-
-      if (direction === "right") {
-        showToast("Interested!", "yes");
-        window.open(`https://polymarket.com/event/${getEventSlug(market)}`, "_blank");
-      } else if (direction === "left") {
-        showToast("Passed", "no");
-      } else if (direction === "up") {
-        // Super like = add to watchlist
-        if (!watchlist.find((m) => (m.id || m.conditionId) === (market.id || market.conditionId))) {
-          setWatchlist((prev) => [market, ...prev]);
-          showToast("Added to Watchlist!", "star");
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore && !fetchingRef.current) {
+          fetchMarkets(offset);
         }
+      },
+      { rootMargin: "300px" }
+    );
+
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [offset, hasMore, fetchMarkets]);
+
+  const savedIds = new Set(watchlist.map((m) => m.id || m.conditionId));
+
+  const toggleSave = useCallback(
+    (market: Market) => {
+      const id = market.id || market.conditionId;
+      if (savedIds.has(id)) {
+        setWatchlist((prev) => prev.filter((m) => (m.id || m.conditionId) !== id));
+        showToast("Removed", "no");
+      } else {
+        setWatchlist((prev) => [market, ...prev]);
+        showToast("Saved to watchlist", "star");
       }
-
-      setTimeout(() => {
-        setCurrentIndex((prev) => prev + 1);
-      }, 200);
     },
-    [currentIndex, markets, watchlist, showToast]
+    [savedIds, showToast]
   );
-
-  const handlePass = useCallback(() => handleSwipe("left"), [handleSwipe]);
-  const handleInterested = useCallback(() => handleSwipe("right"), [handleSwipe]);
-  const handleSuperLike = useCallback(() => handleSwipe("up"), [handleSwipe]);
 
   const removeFromWatchlist = useCallback((id: string) => {
     setWatchlist((prev) => prev.filter((m) => (m.id || m.conditionId) !== id));
   }, []);
 
-  // Keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (showWatchlist) {
-        if (e.key === "Escape") setShowWatchlist(false);
-        return;
-      }
-      switch (e.key) {
-        case "ArrowLeft":
-          handlePass();
-          break;
-        case "ArrowRight":
-          handleInterested();
-          break;
-        case "ArrowUp":
-          handleSuperLike();
-          break;
-      }
+      if (e.key === "Escape" && showWatchlist) setShowWatchlist(false);
     };
-
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [handlePass, handleInterested, handleSuperLike, showWatchlist]);
-
-  const visibleMarkets = markets.slice(currentIndex, currentIndex + 2);
+  }, [showWatchlist]);
 
   return (
     <main className="h-[100dvh] flex flex-col bg-[var(--bg-primary)]">
@@ -144,83 +121,71 @@ export default function Home() {
         showWatchlist={showWatchlist}
       />
 
-      {/* Card Stack */}
-      <div className="flex-1 relative overflow-hidden">
-        {/* Ambient background glow */}
-        <div className="absolute inset-0 pointer-events-none overflow-hidden">
-          <div className="ambient-glow bg-[var(--accent-purple)]/20 -top-20 -left-20" />
-          <div className="ambient-glow bg-[var(--accent-blue)]/15 -bottom-20 -right-20" style={{ animationDelay: "4s" }} />
-        </div>
-
+      {/* Scrollable feed */}
+      <div className="flex-1 overflow-y-auto no-scrollbar">
         {loading ? (
-          <LoadingSkeleton />
-        ) : visibleMarkets.length > 0 ? (
-          <AnimatePresence mode="popLayout">
-            {visibleMarkets.map((market, i) => (
-              <SwipeCard
-                key={market.id || market.conditionId || currentIndex + i}
+          <div className="py-2">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="px-4 py-1.5">
+                <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-2xl overflow-hidden">
+                  <div className="p-4 pb-3">
+                    <div className="flex gap-3">
+                      <div className="w-9 h-9 rounded-lg animate-shimmer flex-shrink-0" />
+                      <div className="flex-1 space-y-2">
+                        <div className="h-4 w-full rounded animate-shimmer" />
+                        <div className="h-4 w-3/4 rounded animate-shimmer" />
+                        <div className="h-3 w-1/3 rounded animate-shimmer" />
+                      </div>
+                    </div>
+                  </div>
+                  <div className="px-4 pb-3">
+                    <div className="h-1.5 w-full rounded-full animate-shimmer" />
+                    <div className="flex justify-between mt-2">
+                      <div className="h-3.5 w-28 rounded animate-shimmer" />
+                      <div className="h-3.5 w-16 rounded animate-shimmer" />
+                    </div>
+                  </div>
+                  <div className="h-10 border-t border-[var(--border)] animate-shimmer" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : markets.length > 0 ? (
+          <div className="py-2">
+            {markets.map((market) => (
+              <MarketCard
+                key={market.id || market.conditionId}
                 market={market}
-                onSwipe={handleSwipe}
-                isTop={i === 0}
+                onSave={toggleSave}
+                isSaved={savedIds.has(market.id || market.conditionId)}
               />
             ))}
-          </AnimatePresence>
+
+            {/* Infinite scroll sentinel */}
+            <div ref={sentinelRef} className="flex items-center justify-center py-6">
+              {hasMore && <div className="feed-spinner" />}
+            </div>
+          </div>
         ) : (
           <div className="h-full flex flex-col items-center justify-center text-[var(--text-muted)] px-8">
-            <div className="w-20 h-20 rounded-3xl bg-[var(--bg-card-elevated)] border border-[var(--border)] flex items-center justify-center mb-5">
-              <svg className="w-9 h-9 text-[var(--accent-purple)]/50" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-            <h3 className="text-lg font-bold text-white mb-1.5">
-              You&apos;ve seen them all!
-            </h3>
-            <p className="text-center text-sm text-[var(--text-muted)] mb-6 max-w-[260px]">
-              Check back later for new prediction markets to explore.
-            </p>
+            <p className="text-sm mb-4">No markets found.</p>
             <button
               onClick={() => {
                 setMarkets([]);
-                setCurrentIndex(0);
                 setOffset(0);
                 setHasMore(true);
                 setLoading(true);
                 fetchMarkets(0);
               }}
-              className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-[var(--accent-purple)] to-[var(--accent-blue)] text-white font-bold text-sm hover:opacity-90 transition-opacity shadow-lg shadow-[var(--accent-purple)]/20"
+              className="px-5 py-2 rounded-xl bg-[var(--accent-purple)] text-white font-semibold text-sm"
             >
-              Refresh Markets
+              Refresh
             </button>
           </div>
         )}
       </div>
 
-      {/* Action Buttons */}
-      {visibleMarkets.length > 0 && (
-        <div className="bg-[var(--bg-primary)]/90 backdrop-blur-xl border-t border-[var(--border)]">
-          <ActionButtons
-            onPass={handlePass}
-            onInterested={handleInterested}
-            onSuperLike={handleSuperLike}
-          />
-          <div className="flex justify-center gap-8 pb-3 text-[10px] text-[var(--text-muted)]/50 font-medium">
-            <span className="flex items-center gap-1">
-              <kbd className="px-1 py-0.5 rounded bg-[var(--bg-card-elevated)] text-[8px] border border-[var(--border)]">←</kbd>
-              Pass
-            </span>
-            <span className="flex items-center gap-1">
-              <kbd className="px-1 py-0.5 rounded bg-[var(--bg-card-elevated)] text-[8px] border border-[var(--border)]">↑</kbd>
-              Save
-            </span>
-            <span className="flex items-center gap-1">
-              <kbd className="px-1 py-0.5 rounded bg-[var(--bg-card-elevated)] text-[8px] border border-[var(--border)]">→</kbd>
-              Trade
-            </span>
-          </div>
-        </div>
-      )}
-
-      {/* Toast Notification */}
+      {/* Toast */}
       <Toast message={toast.message} type={toast.type} visible={toast.visible} />
 
       {/* Watchlist Panel */}
