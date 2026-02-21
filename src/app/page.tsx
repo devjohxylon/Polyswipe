@@ -146,6 +146,12 @@ export default function Home() {
 
       {/* Card Stack */}
       <div className="flex-1 relative overflow-hidden">
+        {/* Ambient background glow */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          <div className="ambient-glow bg-[var(--accent-purple)]/20 -top-20 -left-20" />
+          <div className="ambient-glow bg-[var(--accent-blue)]/15 -bottom-20 -right-20" style={{ animationDelay: "4s" }} />
+        </div>
+
         {loading ? (
           <LoadingSkeleton />
         ) : visibleMarkets.length > 0 ? (
@@ -161,12 +167,16 @@ export default function Home() {
           </AnimatePresence>
         ) : (
           <div className="h-full flex flex-col items-center justify-center text-[var(--text-muted)] px-8">
-            <div className="text-6xl mb-4">🎯</div>
-            <h3 className="text-xl font-bold text-white mb-2">
+            <div className="w-20 h-20 rounded-3xl bg-[var(--bg-card-elevated)] border border-[var(--border)] flex items-center justify-center mb-5">
+              <svg className="w-9 h-9 text-[var(--accent-purple)]/50" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-bold text-white mb-1.5">
               You&apos;ve seen them all!
             </h3>
-            <p className="text-center text-sm mb-6">
-              You&apos;ve swiped through all available markets. Check back later for new ones.
+            <p className="text-center text-sm text-[var(--text-muted)] mb-6 max-w-[260px]">
+              Check back later for new prediction markets to explore.
             </p>
             <button
               onClick={() => {
@@ -177,7 +187,7 @@ export default function Home() {
                 setLoading(true);
                 fetchMarkets(0);
               }}
-              className="px-6 py-2.5 rounded-full bg-[var(--accent-purple)] text-white font-semibold text-sm hover:opacity-90 transition-opacity"
+              className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-[var(--accent-purple)] to-[var(--accent-blue)] text-white font-bold text-sm hover:opacity-90 transition-opacity shadow-lg shadow-[var(--accent-purple)]/20"
             >
               Refresh Markets
             </button>
@@ -187,17 +197,25 @@ export default function Home() {
 
       {/* Action Buttons */}
       {visibleMarkets.length > 0 && (
-        <div className="bg-[var(--bg-primary)]/80 backdrop-blur-md border-t border-[var(--border)]">
+        <div className="bg-[var(--bg-primary)]/90 backdrop-blur-xl border-t border-[var(--border)]">
           <ActionButtons
             onPass={handlePass}
             onInterested={handleInterested}
             onSuperLike={handleSuperLike}
           />
-          {/* Keyboard hints */}
-          <div className="flex justify-center gap-6 pb-3 text-[10px] text-[var(--text-muted)]/40">
-            <span>← Pass</span>
-            <span>↑ Watchlist</span>
-            <span>→ Interested</span>
+          <div className="flex justify-center gap-8 pb-3 text-[10px] text-[var(--text-muted)]/50 font-medium">
+            <span className="flex items-center gap-1">
+              <kbd className="px-1 py-0.5 rounded bg-[var(--bg-card-elevated)] text-[8px] border border-[var(--border)]">←</kbd>
+              Pass
+            </span>
+            <span className="flex items-center gap-1">
+              <kbd className="px-1 py-0.5 rounded bg-[var(--bg-card-elevated)] text-[8px] border border-[var(--border)]">↑</kbd>
+              Save
+            </span>
+            <span className="flex items-center gap-1">
+              <kbd className="px-1 py-0.5 rounded bg-[var(--bg-card-elevated)] text-[8px] border border-[var(--border)]">→</kbd>
+              Trade
+            </span>
           </div>
         </div>
       )}

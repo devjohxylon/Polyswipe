@@ -10,27 +10,30 @@ interface HeaderProps {
 
 export default function Header({ watchlistCount, onToggleWatchlist, showWatchlist }: HeaderProps) {
   return (
-    <header className="relative z-50 flex items-center justify-between px-5 py-3 bg-[var(--bg-primary)]/80 backdrop-blur-md border-b border-[var(--border)]">
-      <div className="flex items-center gap-2">
-        <motion.div
-          initial={{ rotate: -10 }}
-          animate={{ rotate: 0 }}
-          className="text-2xl font-black tracking-tight bg-gradient-to-r from-[var(--accent-purple)] to-[var(--accent-blue)] bg-clip-text text-transparent"
-        >
-          PolySwipe
-        </motion.div>
-        <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[var(--accent-purple)]/20 text-[var(--accent-purple)] font-bold uppercase tracking-wider">
-          Beta
-        </span>
+    <header className="relative z-50 flex items-center justify-between px-5 py-3 bg-[var(--bg-primary)]/90 backdrop-blur-xl border-b border-[var(--border)]">
+      <div className="flex items-center gap-2.5">
+        <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[var(--accent-purple)] to-[var(--accent-blue)] flex items-center justify-center">
+          <svg className="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+          </svg>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-lg font-extrabold tracking-tight text-white">
+            PolySwipe
+          </span>
+          <span className="text-[9px] px-1.5 py-0.5 rounded-md bg-[var(--accent-purple)]/15 text-[var(--accent-purple)] font-bold uppercase tracking-widest border border-[var(--accent-purple)]/20">
+            Beta
+          </span>
+        </div>
       </div>
 
       <motion.button
-        whileTap={{ scale: 0.9 }}
+        whileTap={{ scale: 0.92 }}
         onClick={onToggleWatchlist}
-        className={`relative flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-semibold transition-colors ${
+        className={`relative flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-sm font-semibold transition-all duration-200 ${
           showWatchlist
-            ? "bg-[var(--accent-blue)] text-white"
-            : "bg-[var(--bg-card)] text-[var(--text-secondary)] hover:text-white"
+            ? "bg-[var(--accent-blue)]/15 text-[var(--accent-blue)] border border-[var(--accent-blue)]/30"
+            : "bg-[var(--bg-card-elevated)] text-[var(--text-secondary)] border border-[var(--border)] hover:text-white hover:border-[var(--border-light)]"
         }`}
       >
         <svg className="w-4 h-4" fill={showWatchlist ? "currentColor" : "none"} viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -41,7 +44,7 @@ export default function Header({ watchlistCount, onToggleWatchlist, showWatchlis
             key={watchlistCount}
             initial={{ scale: 1.5 }}
             animate={{ scale: 1 }}
-            className="min-w-[18px] h-[18px] flex items-center justify-center rounded-full bg-[var(--accent-purple)] text-white text-[10px] font-bold"
+            className="badge-pop min-w-[18px] h-[18px] flex items-center justify-center rounded-full bg-gradient-to-r from-[var(--accent-purple)] to-[var(--accent-blue)] text-white text-[10px] font-bold"
           >
             {watchlistCount}
           </motion.span>
