@@ -20,8 +20,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
-      <body className="bg-[var(--bg-primary)] overflow-hidden">
+    <html lang="en" suppressHydrationWarning>
+      <body className="bg-[var(--bg-primary)] overflow-hidden" suppressHydrationWarning>
         {children}
       </body>
     </html>
