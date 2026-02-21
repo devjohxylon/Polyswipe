@@ -67,7 +67,7 @@ export default function Home() {
     fetchMarkets(0);
   }, [fetchMarkets]);
 
-  // Infinite scroll via IntersectionObserver
+  // Infinite scroll
   useEffect(() => {
     const sentinel = sentinelRef.current;
     if (!sentinel) return;
@@ -121,37 +121,27 @@ export default function Home() {
         showWatchlist={showWatchlist}
       />
 
-      {/* Scrollable feed */}
+      {/* Feed */}
       <div className="flex-1 overflow-y-auto no-scrollbar">
         {loading ? (
-          <div className="py-2">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="px-4 py-1.5">
-                <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-2xl overflow-hidden">
-                  <div className="p-4 pb-3">
-                    <div className="flex gap-3">
-                      <div className="w-9 h-9 rounded-lg animate-shimmer flex-shrink-0" />
-                      <div className="flex-1 space-y-2">
-                        <div className="h-4 w-full rounded animate-shimmer" />
-                        <div className="h-4 w-3/4 rounded animate-shimmer" />
-                        <div className="h-3 w-1/3 rounded animate-shimmer" />
-                      </div>
-                    </div>
+          <div>
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div key={i} className="flex gap-3 px-4 py-3 border-b border-[var(--border)]">
+                <div className="w-12 h-12 rounded-lg animate-shimmer flex-shrink-0" />
+                <div className="flex-1 space-y-2 pt-0.5">
+                  <div className="h-3.5 w-full rounded animate-shimmer" />
+                  <div className="h-3.5 w-2/3 rounded animate-shimmer" />
+                  <div className="h-3 w-1/4 rounded animate-shimmer mt-1" />
+                  <div className="flex gap-2 mt-1">
+                    <div className="h-7 w-16 rounded-md animate-shimmer" />
+                    <div className="h-7 w-16 rounded-md animate-shimmer" />
                   </div>
-                  <div className="px-4 pb-3">
-                    <div className="h-1.5 w-full rounded-full animate-shimmer" />
-                    <div className="flex justify-between mt-2">
-                      <div className="h-3.5 w-28 rounded animate-shimmer" />
-                      <div className="h-3.5 w-16 rounded animate-shimmer" />
-                    </div>
-                  </div>
-                  <div className="h-10 border-t border-[var(--border)] animate-shimmer" />
                 </div>
               </div>
             ))}
           </div>
         ) : markets.length > 0 ? (
-          <div className="py-2">
+          <div>
             {markets.map((market) => (
               <MarketCard
                 key={market.id || market.conditionId}
@@ -161,8 +151,7 @@ export default function Home() {
               />
             ))}
 
-            {/* Infinite scroll sentinel */}
-            <div ref={sentinelRef} className="flex items-center justify-center py-6">
+            <div ref={sentinelRef} className="flex items-center justify-center py-8">
               {hasMore && <div className="feed-spinner" />}
             </div>
           </div>
@@ -177,7 +166,7 @@ export default function Home() {
                 setLoading(true);
                 fetchMarkets(0);
               }}
-              className="px-5 py-2 rounded-xl bg-[var(--accent-purple)] text-white font-semibold text-sm"
+              className="px-4 py-2 rounded-lg bg-[var(--poly-blue)] text-white font-medium text-sm"
             >
               Refresh
             </button>
@@ -188,7 +177,7 @@ export default function Home() {
       {/* Toast */}
       <Toast message={toast.message} type={toast.type} visible={toast.visible} />
 
-      {/* Watchlist Panel */}
+      {/* Watchlist */}
       <AnimatePresence>
         {showWatchlist && (
           <WatchlistPanel

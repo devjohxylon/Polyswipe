@@ -30,10 +30,15 @@ export async function GET(request: NextRequest) {
 
     const data = await res.json();
 
-    // The gamma API returns a flat array of markets
+    const seen = new Set<string>();
     const markets = (Array.isArray(data) ? data : []).filter(
-      (m: Record<string, unknown>) =>
-        m.question && m.outcomePrices && m.active && !m.closed
+      (m: Record<string, unknown>) => {
+        if (!m.question || !m.outcomePrices || !m.active || m.closed) return false;
+        const id = String(m.id || m.conditionId);
+        if (seen.has(id)) return false;
+        seen.add(id);
+        return true;
+      }
     );
 
     return NextResponse.json({ markets });

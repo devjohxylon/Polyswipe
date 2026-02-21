@@ -2,8 +2,8 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "PolySwipe — Swipe the Markets",
-  description: "TikTok meets Polymarket. Swipe right to bet YES, left to pass. Discover prediction markets like never before.",
+  title: "PolySwipe — Discover Prediction Markets",
+  description: "Browse and discover Polymarket prediction markets in a fast, scrollable feed.",
 };
 
 export const viewport: Viewport = {
@@ -11,7 +11,7 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
-  themeColor: "#050507",
+  themeColor: "#131722",
 };
 
 export default function RootLayout({
