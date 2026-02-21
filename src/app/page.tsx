@@ -50,7 +50,6 @@ export default function Home() {
       const data = await res.json();
       const incoming: Market[] = data.markets ?? [];
 
-      // Deduplicate across all batches
       const unique = incoming.filter((m) => {
         const id = m.id || m.conditionId;
         if (seenIdsRef.current.has(id)) return false;
@@ -78,7 +77,6 @@ export default function Home() {
     fetchMarkets(0);
   }, [fetchMarkets]);
 
-  // Infinite scroll
   useEffect(() => {
     const sentinel = sentinelRef.current;
     if (!sentinel) return;
@@ -125,7 +123,7 @@ export default function Home() {
   }, [showWatchlist]);
 
   return (
-    <main className="h-[100dvh] flex flex-col bg-[var(--bg-primary)]">
+    <main style={{ height: "100dvh", display: "flex", flexDirection: "column", background: "var(--bg)" }}>
       <Header
         watchlistCount={watchlist.length}
         onToggleWatchlist={() => setShowWatchlist(!showWatchlist)}
@@ -133,21 +131,27 @@ export default function Home() {
       />
 
       {/* Feed */}
-      <div className="flex-1 overflow-y-auto no-scrollbar">
-        <div className="max-w-lg mx-auto">
+      <div className="no-scrollbar" style={{ flex: 1, overflowY: "auto" }}>
+        <div style={{ maxWidth: 520, margin: "0 auto", paddingBottom: 32 }}>
           {loading ? (
-            <div className="py-2">
-              {Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className="px-4 py-2">
-                  <div className="bg-[var(--bg-card)] rounded-xl border border-[var(--border)] overflow-hidden">
-                    <div className="w-full h-40 animate-shimmer" />
-                    <div className="p-4 space-y-3">
-                      <div className="h-5 w-full rounded animate-shimmer" />
-                      <div className="h-5 w-3/4 rounded animate-shimmer" />
-                      <div className="h-3.5 w-1/3 rounded animate-shimmer" />
-                      <div className="flex gap-3 mt-2">
-                        <div className="flex-1 h-12 rounded-lg animate-shimmer" />
-                        <div className="flex-1 h-12 rounded-lg animate-shimmer" />
+            <div style={{ paddingTop: 8 }}>
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} style={{ padding: "8px 12px" }}>
+                  <div
+                    style={{
+                      borderRadius: 20,
+                      border: "1px solid var(--bd)",
+                      overflow: "hidden",
+                      background: "var(--bg-card)",
+                    }}
+                  >
+                    <div className="shimmer" style={{ width: "100%", height: 220 }} />
+                    <div style={{ padding: "14px 16px 16px", display: "flex", flexDirection: "column", gap: 12 }}>
+                      <div className="shimmer" style={{ height: 10, width: "60%", borderRadius: 6 }} />
+                      <div className="shimmer" style={{ height: 5, width: "100%", borderRadius: 999 }} />
+                      <div style={{ display: "flex", gap: 10 }}>
+                        <div className="shimmer" style={{ flex: 1, height: 56, borderRadius: 14 }} />
+                        <div className="shimmer" style={{ flex: 1, height: 56, borderRadius: 14 }} />
                       </div>
                     </div>
                   </div>
@@ -155,7 +159,7 @@ export default function Home() {
               ))}
             </div>
           ) : markets.length > 0 ? (
-            <div className="py-2">
+            <div style={{ paddingTop: 8 }}>
               {markets.map((market) => (
                 <MarketCard
                   key={market.id || market.conditionId}
@@ -165,13 +169,22 @@ export default function Home() {
                 />
               ))}
 
-              <div ref={sentinelRef} className="flex items-center justify-center py-8">
-                {hasMore && <div className="feed-spinner" />}
+              <div ref={sentinelRef} style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: "24px 0" }}>
+                {hasMore && <div className="spinner" />}
               </div>
             </div>
           ) : (
-            <div className="h-full flex flex-col items-center justify-center text-[var(--text-muted)] px-8 pt-32">
-              <p className="text-sm mb-4">No markets found.</p>
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                paddingTop: 120,
+                color: "var(--t3)",
+              }}
+            >
+              <p style={{ fontSize: 14, marginBottom: 16 }}>No markets found.</p>
               <button
                 onClick={() => {
                   setMarkets([]);
@@ -181,19 +194,26 @@ export default function Home() {
                   seenIdsRef.current.clear();
                   fetchMarkets(0);
                 }}
-                className="px-4 py-2 rounded-lg bg-[var(--poly-blue)] text-white font-medium text-sm"
+                style={{
+                  padding: "8px 20px",
+                  borderRadius: 10,
+                  background: "var(--blue)",
+                  color: "#fff",
+                  fontWeight: 600,
+                  fontSize: 14,
+                  border: "none",
+                  cursor: "pointer",
+                }}
               >
-                Refresh
+                Retry
               </button>
             </div>
           )}
         </div>
       </div>
 
-      {/* Toast */}
       <Toast message={toast.message} type={toast.type} visible={toast.visible} />
 
-      {/* Watchlist */}
       <AnimatePresence>
         {showWatchlist && (
           <WatchlistPanel

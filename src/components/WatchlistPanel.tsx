@@ -16,7 +16,13 @@ export default function WatchlistPanel({ markets, onClose, onRemove }: Watchlist
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 bg-black/60"
+      style={{
+        position: "fixed",
+        inset: 0,
+        zIndex: 50,
+        background: "rgba(0,0,0,0.65)",
+        backdropFilter: "blur(4px)",
+      }}
       onClick={onClose}
     >
       <motion.div
@@ -24,87 +30,169 @@ export default function WatchlistPanel({ markets, onClose, onRemove }: Watchlist
         animate={{ y: 0 }}
         exit={{ y: "100%" }}
         transition={{ type: "spring", damping: 28, stiffness: 300 }}
-        className="absolute bottom-0 left-0 right-0 max-h-[80vh] bg-[var(--bg-secondary)] rounded-t-2xl overflow-hidden border-t border-[var(--border)]"
+        style={{
+          position: "absolute",
+          bottom: 0,
+          left: 0,
+          right: 0,
+          maxHeight: "82vh",
+          background: "var(--bg-card)",
+          borderRadius: "24px 24px 0 0",
+          overflow: "hidden",
+          border: "1px solid var(--bd2)",
+          borderBottom: "none",
+        }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Handle */}
-        <div className="flex justify-center pt-3 pb-1">
-          <div className="w-8 h-1 rounded-full bg-[var(--text-muted)]/40" />
+        {/* Drag handle */}
+        <div style={{ display: "flex", justifyContent: "center", paddingTop: 12, paddingBottom: 4 }}>
+          <div style={{ width: 36, height: 4, borderRadius: 999, background: "var(--bd2)" }} />
         </div>
 
         {/* Header */}
-        <div className="flex items-center justify-between px-4 pt-1 pb-3">
-          <div className="flex items-center gap-2">
-            <svg className="w-4 h-4 text-[var(--poly-blue)]" fill="currentColor" viewBox="0 0 24 24">
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            padding: "8px 16px 12px",
+            borderBottom: "1px solid var(--bd)",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <svg width="16" height="16" fill="var(--blue)" viewBox="0 0 24 24">
               <path d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
             </svg>
-            <h2 className="text-[15px] font-bold text-[var(--text-primary)]">Watchlist</h2>
-            <span className="text-[12px] text-[var(--text-muted)]">({markets.length})</span>
+            <span style={{ fontSize: 15, fontWeight: 700, color: "var(--t1)" }}>Watchlist</span>
+            <span style={{ fontSize: 12, color: "var(--t3)" }}>({markets.length})</span>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-md text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-card)] transition-colors"
+            style={{
+              padding: 6,
+              borderRadius: 8,
+              border: "none",
+              background: "transparent",
+              color: "var(--t3)",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
           >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
         </div>
 
         {/* List */}
-        <div className="overflow-y-auto max-h-[65vh] no-scrollbar">
+        <div style={{ overflowY: "auto", maxHeight: "68vh" }} className="no-scrollbar">
           {markets.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-16 text-[var(--text-muted)]">
-              <svg className="w-8 h-8 mb-3 opacity-30" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                padding: "64px 32px",
+                color: "var(--t3)",
+              }}
+            >
+              <svg width="36" height="36" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5} style={{ opacity: 0.3, marginBottom: 12 }}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
               </svg>
-              <p className="text-[13px]">No saved markets yet</p>
+              <p style={{ fontSize: 13, color: "var(--t3)" }}>No saved markets yet</p>
             </div>
           ) : (
             <AnimatePresence>
               {markets.map((market) => {
                 const yesCents = Math.round(getYesPrice(market) * 100);
+                const noCents = 100 - yesCents;
                 return (
                   <motion.a
                     key={market.id || market.conditionId}
                     layout
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, x: -100 }}
+                    exit={{ opacity: 0, x: -80 }}
                     href={`https://polymarket.com/event/${getEventSlug(market)}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-3 px-4 py-2.5 border-b border-[var(--border)] hover:bg-[var(--bg-card)] transition-colors"
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 12,
+                      padding: "10px 16px",
+                      borderBottom: "1px solid var(--bd)",
+                      textDecoration: "none",
+                      transition: "background 0.12s ease",
+                    }}
+                    onMouseOver={(e) => (e.currentTarget.style.background = "var(--bg-card-2)")}
+                    onMouseOut={(e) => (e.currentTarget.style.background = "transparent")}
                   >
                     {market.icon && (
                       <img
                         src={market.icon}
                         alt=""
-                        className="w-9 h-9 rounded-lg object-cover flex-shrink-0"
+                        style={{ width: 40, height: 40, borderRadius: 10, objectFit: "cover", flexShrink: 0 }}
                       />
                     )}
-                    <div className="flex-1 min-w-0">
-                      <p className="text-[12px] font-medium text-[var(--text-primary)] leading-tight line-clamp-2">
+
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <p
+                        style={{
+                          fontSize: 12,
+                          fontWeight: 600,
+                          color: "var(--t1)",
+                          lineHeight: 1.4,
+                          display: "-webkit-box",
+                          WebkitLineClamp: 2,
+                          WebkitBoxOrient: "vertical",
+                          overflow: "hidden",
+                          marginBottom: 4,
+                        }}
+                      >
                         {market.question}
                       </p>
-                      <div className="flex items-center gap-2 mt-1">
-                        <span className="text-[11px] text-[var(--poly-green)] font-semibold">
-                          Yes {yesCents}¢
-                        </span>
-                        <span className="text-[11px] text-[var(--text-muted)]">
-                          {formatVolume(market.volumeNum || 0)}
-                        </span>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <span style={{ fontSize: 11, fontWeight: 700, color: "var(--yes)" }}>YES {yesCents}¢</span>
+                        <span style={{ fontSize: 10, color: "var(--t3)" }}>·</span>
+                        <span style={{ fontSize: 11, fontWeight: 700, color: "var(--no)" }}>NO {noCents}¢</span>
+                        <span style={{ fontSize: 10, color: "var(--t3)" }}>·</span>
+                        <span style={{ fontSize: 11, color: "var(--t3)" }}>{formatVolume(market.volumeNum || 0)}</span>
                       </div>
                     </div>
+
                     <button
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
                         onRemove(market.id || market.conditionId);
                       }}
-                      className="p-1.5 rounded-md text-[var(--text-muted)] hover:text-[var(--poly-red)] hover:bg-[var(--poly-red-bg)] transition-colors flex-shrink-0"
+                      style={{
+                        padding: 6,
+                        borderRadius: 8,
+                        border: "none",
+                        background: "transparent",
+                        color: "var(--t3)",
+                        cursor: "pointer",
+                        flexShrink: 0,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        transition: "color 0.12s, background 0.12s",
+                      }}
+                      onMouseOver={(e) => {
+                        e.currentTarget.style.color = "var(--no)";
+                        e.currentTarget.style.background = "var(--no-dim)";
+                      }}
+                      onMouseOut={(e) => {
+                        e.currentTarget.style.color = "var(--t3)";
+                        e.currentTarget.style.background = "transparent";
+                      }}
                     >
-                      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                       </svg>
                     </button>

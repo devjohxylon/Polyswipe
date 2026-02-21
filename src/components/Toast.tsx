@@ -9,9 +9,9 @@ interface ToastProps {
 }
 
 const config = {
-  yes: { bg: "bg-[var(--poly-green-bg)]", text: "text-[var(--poly-green)]" },
-  no: { bg: "bg-[var(--poly-red-bg)]", text: "text-[var(--poly-red)]" },
-  star: { bg: "bg-[var(--poly-blue)]/15", text: "text-[var(--poly-blue)]" },
+  yes:  { bg: "var(--yes-dim)",  border: "rgba(34,197,94,0.25)",   text: "var(--yes)" },
+  no:   { bg: "var(--no-dim)",   border: "rgba(239,68,68,0.25)",   text: "var(--no)" },
+  star: { bg: "var(--blue-dim)", border: "rgba(91,106,255,0.25)",  text: "var(--blue)" },
 };
 
 export default function Toast({ message, type, visible }: ToastProps) {
@@ -21,13 +21,24 @@ export default function Toast({ message, type, visible }: ToastProps) {
     <AnimatePresence>
       {visible && (
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: 10 }}
-          transition={{ duration: 0.2 }}
-          className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-[100] px-4 py-2 rounded-lg ${c.bg} border border-[var(--border)]`}
+          initial={{ opacity: 0, y: 16, scale: 0.92 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: 8, scale: 0.95 }}
+          transition={{ duration: 0.18 }}
+          style={{
+            position: "fixed",
+            bottom: 28,
+            left: "50%",
+            transform: "translateX(-50%)",
+            zIndex: 100,
+            padding: "8px 18px",
+            borderRadius: 12,
+            background: c.bg,
+            border: `1px solid ${c.border}`,
+            backdropFilter: "blur(8px)",
+          }}
         >
-          <span className={`${c.text} font-medium text-[13px]`}>{message}</span>
+          <span style={{ color: c.text, fontWeight: 600, fontSize: 13 }}>{message}</span>
         </motion.div>
       )}
     </AnimatePresence>
